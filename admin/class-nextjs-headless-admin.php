@@ -66,7 +66,7 @@ class Nextjs_Headless_Admin {
 	}
 
 	/**
-	 * Get organization data endpoint.
+	 * Get main navigation endpoint.
 	 *
 	 * @since    1.0.0
 	 */
@@ -91,7 +91,7 @@ class Nextjs_Headless_Admin {
 	}
 
 	/**
-	 * Get organization data endpoint callback.
+	 * Get main navigation endpoint callback.
 	 *
 	 * @param    array $request request array.
 	 * @since    1.0.0
@@ -130,6 +130,133 @@ class Nextjs_Headless_Admin {
 				'menu_items' => $menu_items,
 				'success'    => $success,
 				'message'    => $message,
+			)
+		);
+
+		return $response;
+	}
+
+	/**
+	 * Get page hero data endpoint.
+	 *
+	 * @since    1.0.0
+	 */
+	public function next_headless_get_page_hero_endpoint() {
+		register_rest_route(
+			'nextheadless/v1',
+			'/getpagehero',
+			array(
+				array(
+					'methods'             => WP_REST_Server::READABLE,
+					'callback'            => array( $this, 'next_headless_get_page_hero_endpoint_callback' ),
+					'args'                => array(
+						'slug' => array(
+							'required' => true,
+							'type'     => 'string',
+						),
+					),
+					'permission_callback' => '__return_true',
+				),
+			)
+		);
+	}
+
+	/**
+	 * Get page hero data endpoint callback.
+	 *
+	 * @param    array $request request array.
+	 * @since    1.0.0
+	 */
+	public function next_headless_get_page_hero_endpoint_callback( $request ) {
+
+		$slug = $request->get_param( 'slug' );
+
+		$hero_data = array();
+
+		$page_id     = '';
+		$homepage_id = get_option( 'page_on_front' );
+
+		if ( ! empty( $slug ) ) {
+
+			$page_data = get_page_by_path( $slug );
+
+			if ( ! empty( $page_data ) ) {
+
+				$page_id = $page_data->ID;
+			}
+		} else {
+			$page_id = $homepage_id;
+		}
+
+		$hero_image        = get_field( 'hero_image', $page_id );
+		$custom_page_title = get_field( 'custom_page_title', $page_id );
+		$page_description  = get_field( 'page_description', $page_id );
+
+		$use_video_background = get_field( 'use_video_background', $page_id );
+		$hero_video_array     = get_field( 'hero_video', $page_id );
+		$disable_hero_section = get_field( 'disable_hero_section', $page_id );
+
+		$hero_video = null;
+
+		if ( '1' == $use_video_background ) { //phpcs:ignore
+			$hero_video = $hero_video_array;
+		}
+
+		$page_title = get_the_title( $page_id );
+
+		if ( ! empty( $custom_page_title ) ) {
+			$page_title = $custom_page_title;
+		}
+
+		$hero_image_output = array(
+			'large' => $hero_image['url'],
+		);
+
+		$hero_img_small = '';
+
+		if ( isset( $hero_image['sizes']['large'] ) && ! empty( $hero_image['sizes']['large'] ) ) {
+			$hero_img_small = $hero_image['sizes']['medium_large'];
+		} else {
+			$hero_img_small = $hero_image['url'];
+		}
+
+		if ( wp_is_mobile() ) {
+			$hero_image_output['large'] = $hero_img_small;
+		}
+
+		$hero_image_output['small'] = $hero_img_small;
+
+		$hero_image = $hero_image_output;
+
+		$hero_data = array(
+			'page_title'       => $page_title,
+			'hero_image'       => $hero_image,
+			'page_description' => $page_description,
+			'post_parent'      => $post_parent,
+			'hero_video'       => $hero_video,
+			'disable_hero'     => $disable_hero_section,
+			'site_language'    => get_locale(),
+		);
+
+		if ( $page_id === $homepage_id ) {
+
+			$hero_tagline = get_field( 'hero_tagline' );
+			$hero_title   = get_field( 'hero_title' );
+			$hero_cta     = get_field( 'hero_cta' );
+			$hero_images  = get_field( 'hero_images' );
+
+			$hero_data['home_hero'] = array(
+				'tagline' => $hero_tagline,
+				'title'   => $hero_title,
+				'cta'     => $hero_cta,
+				'images'  => $hero_images,
+			);
+
+		}
+
+		$response = rest_ensure_response(
+			array(
+				'hero_data' => $hero_data,
 			)
 		);
 
