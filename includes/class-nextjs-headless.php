@@ -146,6 +146,7 @@ class Nextjs_Headless {
 		$this->loader->add_action( 'template_redirect', $plugin_admin, 'headless_redirect_frontend' );
 		$this->loader->add_action( 'rest_api_init', $plugin_admin, 'next_headless_get_main_nav_endpoint' );
 		$this->loader->add_action( 'rest_api_init', $plugin_admin, 'next_headless_get_page_hero_endpoint' );
+		$this->loader->add_action( 'rest_api_init', $plugin_admin, 'next_headless_add_post_excerpt_to_search_results' );
 	}
 
 	/**

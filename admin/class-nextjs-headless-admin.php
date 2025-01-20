@@ -188,6 +188,10 @@ class Nextjs_Headless_Admin {
 			$page_id = $homepage_id;
 		}
 
+		if ( 'search-results' === $slug ) {
+			$page_id = $homepage_id;
+		}
+
 		$hero_image        = get_field( 'hero_image', $page_id );
 		$custom_page_title = get_field( 'custom_page_title', $page_id );
 		$page_description  = get_field( 'page_description', $page_id );
@@ -228,11 +232,14 @@ class Nextjs_Headless_Admin {
 
 		$hero_image = $hero_image_output;
 
+		if ( 'search-results' === $slug ) {
+			$page_title = __( 'Sökresultat för:', 'nextjs-headless' );
+		}
+
 		$hero_data = array(
 			'page_title'       => $page_title,
 			'hero_image'       => $hero_image,
 			'page_description' => $page_description,
-			'post_parent'      => $post_parent,
 			'hero_video'       => $hero_video,
 			'disable_hero'     => $disable_hero_section,
 			'site_language'    => get_locale(),
@@ -261,5 +268,40 @@ class Nextjs_Headless_Admin {
 		);
 
 		return $response;
+	}
+
+	/**
+	 * Add post excerpt to search results REST APi endpoint.
+	 *
+	 * @since    1.0.0
+	 */
+	public function next_headless_add_post_excerpt_to_search_results() {
+
+		register_rest_field(
+			'search-result',
+			'excerpt',
+			array(
+				'get_callback' => array( $this, 'next_headless_get_post_excerpt' ),
+			)
+		);
+	}
+
+	/**
+	 * Get post excerpt.
+	 *
+	 * @param    WP_post $post post array.
+	 * @since    1.0.0
+	 */
+	public function next_headless_get_post_excerpt( $post ) {
+
+		$post_excerpt = '';
+
+		$post_data = get_post( $post['id'] );
+
+		if ( ! empty( $post_data ) && ! is_wp_error( $post_data ) ) {
+			$post_excerpt = wp_trim_words( wp_strip_all_tags( apply_filters( 'the_content', $post_data->post_content ) ), 80 );
+		}
+
+		return $post_excerpt;
 	}
 }
