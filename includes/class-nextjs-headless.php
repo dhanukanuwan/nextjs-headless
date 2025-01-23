@@ -147,6 +147,8 @@ class Nextjs_Headless {
 		$this->loader->add_action( 'rest_api_init', $plugin_admin, 'next_headless_get_main_nav_endpoint' );
 		$this->loader->add_action( 'rest_api_init', $plugin_admin, 'next_headless_get_page_hero_endpoint' );
 		$this->loader->add_action( 'rest_api_init', $plugin_admin, 'next_headless_add_post_excerpt_to_search_results' );
+		$this->loader->add_action( 'save_post', $plugin_admin, 'next_headless_trigger_revalidate_request', 10, 2 );
+		$this->loader->add_action( 'wp_update_nav_menu', $plugin_admin, 'next_headless_trigger_revalidate_request_on_menu_update', 10, 1 );
 	}
 
 	/**

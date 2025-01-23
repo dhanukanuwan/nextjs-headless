@@ -212,15 +212,19 @@ class Nextjs_Headless_Admin {
 			$page_title = $custom_page_title;
 		}
 
-		$hero_image_output = array(
-			'large' => $hero_image['url'],
-		);
+		$hero_image_output = array();
+
+		if ( $hero_image && isset( $hero_image['url'] ) ) {
+			$hero_image_output = array(
+				'large' => $hero_image['url'],
+			);
+		}
 
 		$hero_img_small = '';
 
 		if ( isset( $hero_image['sizes']['large'] ) && ! empty( $hero_image['sizes']['large'] ) ) {
 			$hero_img_small = $hero_image['sizes']['medium_large'];
-		} else {
+		} elseif ( isset( $hero_image['url'] ) ) {
 			$hero_img_small = $hero_image['url'];
 		}
 
@@ -303,5 +307,73 @@ class Nextjs_Headless_Admin {
 		}
 
 		return $post_excerpt;
+	}
+
+	/**
+	 * Trigger Next JS revalidate request on post update.
+	 *
+	 * @param    integer $post_id .
+	 * @param    WP_post $post post array.
+	 * @since    1.0.0
+	 */
+	public function next_headless_trigger_revalidate_request( $post_id, $post ) {
+
+		$allowed_post_types = array( 'page', 'post' );
+
+		if ( ! in_array( $post->post_type, $allowed_post_types, true ) ) {
+			return;
+		}
+
+		$token     = 'mE5tRHwPjbeek0zxy0lsbpfurrKslK7RBfoylySpUtRvmeAirVv7a928QwrtDGjl';
+		$page_slug = get_page_uri( $post_id );
+
+		$request_headers = array(
+			'Content-Type' => 'application/json',
+			'timeout'      => 60,
+			'sslverify'    => false,
+		);
+
+		$request_url = 'http://209.38.131.64/api/revalidate/?token=' . rawurlencode( $token ) . '&page_slug=' . $page_slug;
+
+		$options = array(
+			'headers' => $request_headers,
+		);
+
+		wp_remote_post( $request_url, $options );
+	}
+
+	/**
+	 * Trigger Next JS revalidate request on nav menu update.
+	 *
+	 * @param    integer $menu_id .
+	 * @since    1.0.0
+	 */
+	public function next_headless_trigger_revalidate_request_on_menu_update( $menu_id ) {
+
+		$menu_locations = get_nav_menu_locations();
+
+		if ( ! empty( $menu_locations ) && isset( $menu_locations['primary_navigation'] ) ) {
+
+			$primary_nav_id = (int) $menu_locations['primary_navigation'];
+
+			if ( $primary_nav_id === (int) $menu_id ) {
+
+				$token = 'mE5tRHwPjbeek0zxy0lsbpfurrKslK7RBfoylySpUtRvmeAirVv7a928QwrtDGjl';
+
+				$request_headers = array(
+					'Content-Type' => 'application/json',
+					'timeout'      => 60,
+					'sslverify'    => false,
+				);
+
+				$request_url = 'http://209.38.131.64/api/revalidate/?token=' . rawurlencode( $token ) . '&tag=main_nav';
+
+				$options = array(
+					'headers' => $request_headers,
+				);
+
+				wp_remote_post( $request_url, $options );
+			}
+		}
 	}
 }
